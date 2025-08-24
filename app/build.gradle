@@ -1,0 +1,28 @@
+plugins { id("com.android.application") }
+
+android {
+  namespace "com.ashforge.panel"
+  compileSdk 35
+
+  defaultConfig {
+    applicationId "com.ashforge.panel"
+    minSdk 24
+    targetSdk 35
+    versionCode 1
+    versionName "1.0"
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+    }
+    debug {
+      // keep it simple
+    }
+  }
+}
+
+dependencies {
+  implementation "androidx.appcompat:appcompat:1.7.0"
+}
