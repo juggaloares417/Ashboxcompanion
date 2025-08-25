@@ -23,7 +23,10 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
+       - name: Install Android packages
+        run: |
+          yes | sdkmanager --licenses
+          yes | sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
       # Use a modern Gradle to generate the wrapper (your error was old Gradle)
       - name: Setup Gradle 8.7 (no wrapper yet)
         uses: gradle/actions/setup-gradle@v3
