@@ -1,32 +1,43 @@
 name: build-apk
+
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build.yml"
+      - "**/*.gradle*"
+      - "**/src/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-          cache: gradle
+          java-version: "17"
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install platforms & build-tools
-        run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-      - name: Generate Gradle wrapper
-        run: |
-          gradle --version || sudo apt-get update && sudo apt-get install -y gradle
-          gradle wrapper --gradle-version 8.12.1
+
+      # Use a modern Gradle to generate the wrapper (your error was old Gradle)
+      - name: Setup Gradle 8.7 (no wrapper yet)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.7
+
+      - name: Generate Gradle wrapper (8.7)
+        run: gradle wrapper --gradle-version 8.7
+
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug
+        run: ./gradlew --no-daemon assembleDebug
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ashjr-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: debug-apk
+          path: "**/build/outputs/apk/**/debug/*.apk"
