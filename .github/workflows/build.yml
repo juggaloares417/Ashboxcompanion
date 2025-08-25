@@ -23,11 +23,12 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-       - name: Install Android packages
+
+      - name: Install Android packages
         run: |
           yes | sdkmanager --licenses
-          yes | sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-      # Use a modern Gradle to generate the wrapper (your error was old Gradle)
+          yes | sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
       - name: Setup Gradle 8.7 (no wrapper yet)
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -35,6 +36,9 @@ jobs:
 
       - name: Generate Gradle wrapper (8.7)
         run: gradle wrapper --gradle-version 8.7
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
 
       - name: Build debug APK
         run: ./gradlew --no-daemon assembleDebug
@@ -44,3 +48,5 @@ jobs:
         with:
           name: debug-apk
           path: "**/build/outputs/apk/**/debug/*.apk"
+
+# ci: trigger 2025-08-25T01:03:01Z
