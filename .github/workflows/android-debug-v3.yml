@@ -3,11 +3,14 @@ name: Android Debug v3
 on:
   workflow_dispatch:
   push:
+    branches: [ main ]
     paths:
       - '**/*.kt'
       - '**/*.java'
+      - '**/*.xml'
       - '**/build.gradle*'
       - 'gradle/**'
+      - 'settings.gradle*'
       - 'app/**'
       - '.github/workflows/android-debug-v3.yml'
 
@@ -15,8 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -25,14 +27,29 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Make gradle executable
-        run: chmod +x ./gradlew
+      - name: Set up Android SDK (API 34)
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-34
+            build-tools;34.0.0
+            platform-tools
+
+      - name: Verify Gradle wrapper
+        run: |
+          if [ ! -f ./gradlew ]; then
+            echo "❌ gradlew missing at repo root. Commit your Android project (with gradlew) and try again."
+            ls -la
+            exit 1
+          fi
+          chmod +x ./gradlew
 
       - name: Build Debug APK
-        run: ./gradlew :app:assembleDebug
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
