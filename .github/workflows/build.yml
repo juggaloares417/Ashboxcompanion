@@ -6,56 +6,41 @@ on:
       - ".github/workflows/build.yml"
       - "**/*.gradle*"
       - "**/src/**"
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
+      - uses: android-actions/setup-android@v3
       - name: Install Android packages
         run: |
           yes | sdkmanager --licenses
-          yes | sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Setup Gradle 8.7 (no wrapper yet)
-        uses: gradle/actions/setup-gradle@v3
+          yes | sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
           cache-disabled: true
-
       - name: Generate Gradle wrapper (8.7)
+        working-directory: Ashboxcompanion
         run: gradle wrapper --gradle-version 8.7
-
       - name: Make Gradle wrapper executable
+        working-directory: Ashboxcompanion
         run: chmod +x gradlew
-
-      - name: Create local.properties (SDK path)
-        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-
       - name: Show modules
+        working-directory: Ashboxcompanion
         run: ./gradlew projects
-
       - name: Build debug APK (verbose)
+        working-directory: Ashboxcompanion
         run: ./gradlew --no-daemon --stacktrace --info assembleDebug
-
       - name: Upload APK artifact(s)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
           path: |
-            **/build/outputs/apk/**/debug/*.apk
-            **/build/outputs/**/*-debug.apk
-
-# ci: trigger 2025-08-25T01:08:02Z
+            Ashboxcompanion/**/build/outputs/apk/**/debug/*.apk
+            Ashboxcompanion/**/build/outputs/**/*-debug.apk
