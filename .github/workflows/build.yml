@@ -1,5 +1,4 @@
 name: build-apk
-
 on:
   workflow_dispatch:
   push:
@@ -7,7 +6,6 @@ on:
     paths:
       - ".github/workflows/build.yml"
       - "Ashboxcompanion/**"
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,7 +30,7 @@ jobs:
           yes | sdkmanager "platforms;android-34"
           yes | sdkmanager "build-tools;34.0.0"
 
-      - name: Setup Gradle 8.7
+      - name: Setup Gradle 8.8
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.8
@@ -41,11 +39,6 @@ jobs:
       - name: Write local.properties (SDK path)
         working-directory: Ashboxcompanion
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-
-      - name: Show Gradle & JDK
-        run: |
-          gradle -v
-          java -version
 
       - name: List modules
         run: gradle -p Ashboxcompanion projects
