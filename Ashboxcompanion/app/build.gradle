@@ -1,0 +1,10 @@
+
+android {
+    defaultConfig {
+        minSdk 24
+        targetSdk 34
+    }
+
+    namespace "com.ashbox.app"
+    compileSdk 34
+}

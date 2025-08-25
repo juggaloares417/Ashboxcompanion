@@ -6,36 +6,37 @@ on:
       - ".github/workflows/build.yml"
       - "**/*.gradle*"
       - "**/src/**"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: android-actions/setup-android@v3
+
       - name: Install Android packages
         run: |
           yes | sdkmanager --licenses
           yes | sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      # Install Gradle 8.7 and use the CLI directly (no wrapper)
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
           cache-disabled: true
-      - name: Generate Gradle wrapper (8.7)
-        working-directory: Ashboxcompanion
-        run: gradle wrapper --gradle-version 8.7
-      - name: Make Gradle wrapper executable
-        working-directory: Ashboxcompanion
-        run: chmod +x gradlew
+
       - name: Show modules
-        working-directory: Ashboxcompanion
-        run: ./gradlew projects
+        run: gradle -p Ashboxcompanion projects
+
       - name: Build debug APK (verbose)
-        working-directory: Ashboxcompanion
-        run: ./gradlew --no-daemon --stacktrace --info assembleDebug
+        run: gradle -p Ashboxcompanion --no-daemon --stacktrace --info assembleDebug
+
       - name: Upload APK artifact(s)
         if: always()
         uses: actions/upload-artifact@v4
