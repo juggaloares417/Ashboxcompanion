@@ -1,41 +1,57 @@
 name: build-apk
+
 on:
   workflow_dispatch:
   push:
+    branches: [ main ]
     paths:
       - ".github/workflows/build.yml"
-      - "**/*.gradle*"
-      - "**/src/**"
+      - "Ashboxcompanion/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Install Android packages
         run: |
           yes | sdkmanager --licenses
-          yes | sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          yes | sdkmanager "platform-tools"
+          yes | sdkmanager "cmdline-tools;latest"
+          yes | sdkmanager "platforms;android-34"
+          yes | sdkmanager "build-tools;34.0.0"
 
-      # Install Gradle 8.7 and use the CLI directly (no wrapper)
-      - uses: gradle/actions/setup-gradle@v3
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
           cache-disabled: true
 
-      - name: Show modules
+      - name: Write local.properties (SDK path)
+        working-directory: Ashboxcompanion
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: Show Gradle & JDK
+        run: |
+          gradle -v
+          java -version
+
+      - name: List modules
         run: gradle -p Ashboxcompanion projects
 
       - name: Build debug APK (verbose)
-        run: gradle -p Ashboxcompanion --no-daemon --stacktrace --info assembleDebug
+        run: gradle -p Ashboxcompanion --no-daemon --stacktrace --info clean assembleDebug
 
       - name: Upload APK artifact(s)
         if: always()
