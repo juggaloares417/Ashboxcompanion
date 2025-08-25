@@ -1,0 +1,64 @@
+name: android-debug-v3
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect Gradle root (repo root vs Ashboxcompanion/)
+        id: detect-root
+        run: |
+          if [ -x gradlew ]; then echo "GROOT=." >> $GITHUB_ENV
+          elif [ -x Ashboxcompanion/gradlew ]; then echo "GROOT=Ashboxcompanion" >> $GITHUB_ENV
+          else
+            echo "No gradlew at repo root or Ashboxcompanion"; ls -la; exit 1
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle (cache)
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platforms;android-34
+            build-tools;34.0.0
+            platform-tools
+
+      - name: Detect app module
+        id: detect-module
+        working-directory: ${{ env.GROOT }}
+        run: |
+          MOD=$(grep -R -l "com.android.application" -n */build.gradle* | head -n1 | cut -d/ -f1 || true)
+          [ -n "$MOD" ] || { echo "No app module found. Check settings.gradle includes."; exit 1; }
+          echo "APP_MOD=$MOD" >> $GITHUB_ENV
+          echo "Detected module: $MOD"
+
+      - name: Build Debug APK
+        working-directory: ${{ env.GROOT }}
+        run: ./gradlew --no-daemon :${{ env.APP_MOD }}:assembleDebug --stacktrace
+
+      - name: Package artifact (debug-apk.zip)
+        run: |
+          mkdir -p artifacts
+          cp "${{ env.GROOT }}/${{ env.APP_MOD }}/build/outputs/apk/debug/"*.apk artifacts/
+          (cd artifacts && zip -r debug-apk.zip *.apk)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: artifacts/debug-apk.zip
+          retention-days: 7
