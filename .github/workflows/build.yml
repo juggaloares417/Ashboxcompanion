@@ -1,5 +1,4 @@
 name: build-apk
-
 on:
   workflow_dispatch:
   push:
@@ -27,12 +26,13 @@ jobs:
       - name: Install Android packages
         run: |
           yes | sdkmanager --licenses
-          yes | sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          yes | sdkmanager "cmdline-tools;latest" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Setup Gradle 8.7 (no wrapper yet)
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
+          cache-disabled: true
 
       - name: Generate Gradle wrapper (8.7)
         run: gradle wrapper --gradle-version 8.7
@@ -40,13 +40,22 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew --no-daemon assembleDebug
+      - name: Create local.properties (SDK path)
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Upload APK artifact
+      - name: Show modules
+        run: ./gradlew projects
+
+      - name: Build debug APK (verbose)
+        run: ./gradlew --no-daemon --stacktrace --info assembleDebug
+
+      - name: Upload APK artifact(s)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: "**/build/outputs/apk/**/debug/*.apk"
+          path: |
+            **/build/outputs/apk/**/debug/*.apk
+            **/build/outputs/**/*-debug.apk
 
-# ci: trigger 2025-08-25T01:03:01Z
+# ci: trigger 2025-08-25T01:08:02Z
