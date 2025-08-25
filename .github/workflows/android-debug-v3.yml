@@ -12,6 +12,7 @@ on:
       - 'settings.gradle*'
       - 'app/**'
       - '.github/workflows/android-debug-v3.yml'
+
 jobs:
   build:
     runs-on: ubuntu-latest
