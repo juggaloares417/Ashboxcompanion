@@ -3,51 +3,53 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
-    paths:
-      - '**/*.kt'
-      - '**/*.java'
-      - '**/*.xml'
-      - '**/build.gradle*'
-      - 'gradle/**'
-      - 'settings.gradle*'
-      - 'app/**'
-      - '.github/workflows/android-debug-v3.yml'
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
           cache: gradle
 
-      # Accept licenses BEFORE installing SDK packages (prevents y/N hang)
-      - name: Accept Android SDK licenses (preinstalled sdkmanager)
+      - name: Install Android cmdline-tools
         run: |
-          set -e
-          if [ -x /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager ]; then
-            yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null
-          else
-            yes | sdkmanager --licenses >/dev/null
+          set -eux
+          SDK="$HOME/android-sdk"
+          mkdir -p "$SDK/cmdline-tools"
+          curl -sL https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip -o cmdtools.zip
+          unzip -q cmdtools.zip -d "$SDK/cmdline-tools"
+          mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "$SDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Accept SDK licenses
+        run: yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null
+
+      - name: Install SDK packages (retry + fallback to API 33)
+        run: |
+          set -eux
+          PKGS34="platform-tools build-tools;34.0.0 platforms;android-34"
+          PKGS33="platform-tools build-tools;33.0.2 platforms;android-33"
+          for n in 1 2 3; do
+            sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --update || true
+            sdkmanager --sdk_root="$ANDROID_SDK_ROOT" $PKGS34 && OK=1 && break || { echo "retry $n"; sleep $((20*n)); }
+          done
+          if [ "${OK:-0}" != "1" ]; then
+            echo "Falling back to API 33"
+            sdkmanager --sdk_root="$ANDROID_SDK_ROOT" $PKGS33
+            # soften compile/target SDK to 33 if needed
+            sed -i -E 's/(compileSdk\s*=?\s*)34/\133/g' app/build.gradle* || true
+            sed -i -E 's/(targetSdk\s*=?\s*)34/\133/g'   app/build.gradle* || true
           fi
 
-      - name: Set up Android SDK (API 34)
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-34
-            build-tools;34.0.0
-            platform-tools
-
-      - name: Generate Gradle wrapper if missing (8.7)
+      - name: Ensure Gradle wrapper (8.7)
         run: |
           if [ ! -f ./gradlew ]; then
-            echo "No gradlew—generating wrapper..."
             curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o gradle.zip
             unzip -q gradle.zip -d .
             ./gradle-8.7/bin/gradle wrapper --gradle-version 8.7
