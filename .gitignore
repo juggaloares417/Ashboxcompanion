@@ -2,3 +2,15 @@
 *.bak
 
 *.bak
+
+# Gradle junk (do not commit)
+.gradle/
+/gradle/
+/gradle-*/
+gradle.zip
+
+# Gradle junk (do not commit)
+.gradle/
+/gradle/
+/gradle-*/
+gradle.zip
