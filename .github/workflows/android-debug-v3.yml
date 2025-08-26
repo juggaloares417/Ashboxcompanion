@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,22 +31,12 @@ jobs:
       - name: Accept SDK licenses
         run: yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null
 
-      - name: Install SDK packages (retry + fallback to API 33)
+      - name: Install SDK packages (API 33)
         run: |
           set -eux
-          PKGS34="platform-tools build-tools;34.0.0 platforms;android-34"
-          PKGS33="platform-tools build-tools;33.0.2 platforms;android-33"
-          for n in 1 2 3; do
-            sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --update || true
-            sdkmanager --sdk_root="$ANDROID_SDK_ROOT" $PKGS34 && OK=1 && break || { echo "retry $n"; sleep $((20*n)); }
-          done
-          if [ "${OK:-0}" != "1" ]; then
-            echo "Falling back to API 33"
-            sdkmanager --sdk_root="$ANDROID_SDK_ROOT" $PKGS33
-            # soften compile/target SDK to 33 if needed
-            sed -i -E 's/(compileSdk\s*=?\s*)34/\133/g' app/build.gradle* || true
-            sed -i -E 's/(targetSdk\s*=?\s*)34/\133/g'   app/build.gradle* || true
-          fi
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --update
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
       - name: Ensure Gradle wrapper (8.7)
         run: |
@@ -57,8 +48,8 @@ jobs:
           chmod +x ./gradlew
           ./gradlew --version
 
-      - name: Build Debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+      - name: Build Debug APK (verbose)
+        run: ./gradlew :app:assembleDebug --stacktrace --info --warning-mode=all
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
