@@ -26,6 +26,16 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      # Accept licenses BEFORE installing SDK packages (prevents y/N hang)
+      - name: Accept Android SDK licenses (preinstalled sdkmanager)
+        run: |
+          set -e
+          if [ -x /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager ]; then
+            yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null
+          else
+            yes | sdkmanager --licenses >/dev/null
+          fi
+
       - name: Set up Android SDK (API 34)
         uses: android-actions/setup-android@v3
         with:
@@ -33,9 +43,6 @@ jobs:
             platforms;android-34
             build-tools;34.0.0
             platform-tools
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses >/dev/null
 
       - name: Generate Gradle wrapper if missing (8.7)
         run: |
