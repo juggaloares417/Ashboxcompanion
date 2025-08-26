@@ -1,49 +1,35 @@
 name: Android Debug v3
+
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
-      - name: JDK 17
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
-
-      - name: Install Android cmdline-tools
-        run: |
-          set -eux
-          SDK="$HOME/android-sdk"
-          mkdir -p "$SDK/cmdline-tools"
-          curl -sL https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip -o cmdtools.zip
-          unzip -q cmdtools.zip -d "$SDK/cmdline-tools"
-          mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
-          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
-          echo "$SDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
-
-      - name: Accept SDK licenses
-        run: yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null
 
       - name: Install SDK packages (API 33)
         run: |
           set -eux
-          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --update
-          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --sdk_root="${ANDROID_HOME}" --licenses <<<'y'
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --sdk_root="${ANDROID_HOME}" --update
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --sdk_root="${ANDROID_HOME}" \
+            "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
-      - name: Ensure Gradle wrapper (8.7)
+      - name: Verify Gradle wrapper (8.7)
         run: |
-          if [ ! -f ./gradlew ]; then
-            curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o gradle.zip
-            unzip -q gradle.zip -d .
-            ./gradle-8.7/bin/gradle wrapper --gradle-version 8.7
-          fi
           chmod +x ./gradlew
           ./gradlew --version
 
