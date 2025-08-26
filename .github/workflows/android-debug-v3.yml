@@ -42,7 +42,7 @@ jobs:
           if [ ! -f ./gradlew ]; then
             curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o gradle.zip
             unzip -q gradle.zip -d .
-            ./gradle-8.7/bin/gradle wrapper --gradle-version 8.6
+            ./gradle-8.7/bin/gradle wrapper --gradle-version 8.7
           fi
           chmod +x ./gradlew
           ./gradlew --version
