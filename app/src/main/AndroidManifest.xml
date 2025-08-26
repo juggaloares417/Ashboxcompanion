@@ -1,13 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ashforge.panel">
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <application
-      android:label="AshJr"
-      android:icon="@mipmap/ic_launcher"
-      android:allowBackup="true"
-      android:supportsRtl="true">
-    <activity android:name=".MainActivity"
-      android:exported="true">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ashforge.panel">
+  <application android:label="Ashbox Companion" android:icon="@mipmap/ic_launcher">
+    <activity android:name=".MainActivity" android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>

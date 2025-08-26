@@ -7,7 +7,6 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/title"
         android:text="Ashbox Companion"
         android:textStyle="bold"
         android:textSize="22sp"
@@ -15,7 +14,6 @@
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/subtitle"
         android:text="Quick actions"
         android:layout_marginTop="8dp"
         android:layout_width="wrap_content"
