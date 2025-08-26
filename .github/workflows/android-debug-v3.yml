@@ -37,12 +37,12 @@ jobs:
           sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --update
           sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
-      - name: Ensure Gradle wrapper (8.6)
+      - name: Ensure Gradle wrapper (8.7)
         run: |
           if [ ! -f ./gradlew ]; then
-            curl -sL https://services.gradle.org/distributions/gradle-8.6-bin.zip -o gradle.zip
+            curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o gradle.zip
             unzip -q gradle.zip -d .
-            ./gradle-8.6/bin/gradle wrapper --gradle-version 8.6
+            ./gradle-8.7/bin/gradle wrapper --gradle-version 8.6
           fi
           chmod +x ./gradlew
           ./gradlew --version
