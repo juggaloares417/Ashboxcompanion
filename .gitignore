@@ -14,3 +14,17 @@ gradle.zip
 /gradle/
 /gradle-*/
 gradle.zip
+
+# local gradle dists
+/gradle-*/
+/gradle.zip
+
+# Gradle junk (local)
+/gradle-*/
+/gradle.zip
+/.gradle/
+
+# Gradle junk (local)
+/gradle-*/
+/gradle.zip
+/.gradle/
